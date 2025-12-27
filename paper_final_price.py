@@ -779,6 +779,18 @@ def volatility_pattern(vols):
 ############# WORKFLOW #############################
 
 def load_spy_data(csv_path: Path) -> pd.DataFrame:
+    """
+    Load SPY tick data from CSV: 
+    - Read the CSV with Polars.
+    - Detect timestamp and price columns and rename to DT/Price.
+    - Convert to pandas, coerce types, sort by DT, and drop NaNs.
+    - Add a date column and remove days listed in FOMC and TRADING_HALT.
+    Args:
+        csv_path: Path to the SPY tick CSV file.
+    Returns:
+        A pandas DataFrame with columns DT, Price, and date,
+        filtered to exclude FOMC and trading-halt dates.
+    """
     df_pl = pl.read_csv(csv_path)
     # Normalize column names
     cols_upper = {c.upper(): c for c in df_pl.columns}
@@ -799,6 +811,14 @@ def load_spy_data(csv_path: Path) -> pd.DataFrame:
 
 @njit #decorator for HPC
 def quadratic_covariations_njit(vol_increments: np.ndarray, window: int, n_lags: int) -> np.ndarray:
+    """
+    Args:
+        vol_increments: 1D array of volatility increments
+        window: Number of steps per window (K)
+        n_lags: Number of lags to compute (including lag 0 internally)
+    Returns:
+        1D array of length n_lags-1 containing covariations for lags 1..n_lags-1
+    """
     cov = np.zeros(n_lags)
     n = len(vol_increments)
     for lag in range(n_lags):
@@ -819,6 +839,17 @@ def quadratic_covariations_njit(vol_increments: np.ndarray, window: int, n_lags:
 
 
 def compute_daily_volatilities(df: pd.DataFrame, window_steps: int, price_truncation: str = PRICE_TRUNCATION):
+    """
+    Args:
+        df: DataFrame with DT, Price, and date columns
+        window_steps: Window size (K) in subsampling steps.
+        price_truncation: Truncation method for price increments.
+    Returns:
+        A tuple of:
+        1) daily: list of dicts with keys "date" and "vol" (Volatility objects).
+        2) pattern_values: ndarray of intraday pattern values or None
+        3) errors: list of error strings for days that failed processing.
+    """
     pattern_builder = VolatilityPattern()
     daily = []
     errors: List[str] = []
@@ -847,6 +878,23 @@ def compute_daily_volatilities(df: pd.DataFrame, window_steps: int, price_trunca
 
 
 def compute_quadratic_covariations(daily, pattern_values: np.ndarray, window_steps: int, n_lags_qv: int, vol_truncation=VOL_TRUNCATION):
+    """
+    Steps:
+    - Normalize each day's volatility by the intraday pattern and mean level.
+    - Compute windowed increments and apply truncation to outliers
+    - Compute quadratic covariations per day and average across days
+    Args:
+        daily: list of dicts from compute_daily_volatilities.
+        pattern_values: ndarray of intraday pattern values.
+        window_steps: Window size (K) in subsampling steps.
+        n_lags_qv: Number of lags (including lag 0 internally).
+        vol_truncation: Truncation rule or numeric threshold.
+    Returns:
+        A tuple of (V_avg, V_matrix, lags) where:
+        - V_avg is the average covariation across days.
+        - V_matrix is the per-day covariation matrix.
+        - lags is the lag index array (1..n_lags_qv-1).
+    """
     if pattern_values is None:
         raise RuntimeError('No intraday volatility pattern available (not enough valid days).')
     V_by_day = []
@@ -877,6 +925,13 @@ def compute_quadratic_covariations(daily, pattern_values: np.ndarray, window_ste
     return V_avg, V_matrix, lags
 
 def build_Psi_function(lags: np.ndarray, window_steps: int):
+    """
+    Args:
+        lags: 1D array of lag indices (1..n_lags-1).
+        window_steps: Window size (K) in subsampling steps.
+    Returns:
+        A callable Psi(H) that produces model-implied covariations for a given H.
+    """
     def Psi(H):
         factor = (window_steps ** (2 * H))
         out = []
@@ -980,5 +1035,3 @@ for window, data in results.items():
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.show()
-
-
