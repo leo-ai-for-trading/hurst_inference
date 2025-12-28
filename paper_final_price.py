@@ -780,12 +780,7 @@ def volatility_pattern(vols):
 
 def load_spy_data(csv_path: Path) -> pd.DataFrame:
     """
-    Load SPY tick data from CSV: 
-    - Read the CSV with Polars.
-    - Detect timestamp and price columns and rename to DT/Price.
-    - Convert to pandas, coerce types, sort by DT, and drop NaNs.
-    - Add a date column and remove days listed in FOMC and TRADING_HALT.
-    Args:
+    param:
         csv_path: Path to the SPY tick CSV file.
     Returns:
         A pandas DataFrame with columns DT, Price, and date,
@@ -812,7 +807,7 @@ def load_spy_data(csv_path: Path) -> pd.DataFrame:
 @njit #decorator for HPC
 def quadratic_covariations_njit(vol_increments: np.ndarray, window: int, n_lags: int) -> np.ndarray:
     """
-    Args:
+    param:
         vol_increments: 1D array of volatility increments
         window: Number of steps per window (K)
         n_lags: Number of lags to compute (including lag 0 internally)
@@ -840,7 +835,7 @@ def quadratic_covariations_njit(vol_increments: np.ndarray, window: int, n_lags:
 
 def compute_daily_volatilities(df: pd.DataFrame, window_steps: int, price_truncation: str = PRICE_TRUNCATION):
     """
-    Args:
+    params:
         df: DataFrame with DT, Price, and date columns
         window_steps: Window size (K) in subsampling steps.
         price_truncation: Truncation method for price increments.
@@ -883,7 +878,7 @@ def compute_quadratic_covariations(daily, pattern_values: np.ndarray, window_ste
     - Normalize each day's volatility by the intraday pattern and mean level.
     - Compute windowed increments and apply truncation to outliers
     - Compute quadratic covariations per day and average across days
-    Args:
+    params:
         daily: list of dicts from compute_daily_volatilities.
         pattern_values: ndarray of intraday pattern values.
         window_steps: Window size (K) in subsampling steps.
@@ -926,7 +921,7 @@ def compute_quadratic_covariations(daily, pattern_values: np.ndarray, window_ste
 
 def build_Psi_function(lags: np.ndarray, window_steps: int):
     """
-    Args:
+    params:
         lags: 1D array of lag indices (1..n_lags-1).
         window_steps: Window size (K) in subsampling steps.
     Returns:
@@ -950,6 +945,15 @@ def estimate_H(V_avg: np.ndarray, lags: np.ndarray, window_steps: int):
 run_start = time.time()
 df = load_spy_data(CSV_PATH)
 df.head()
+
+# Plot SPY price series
+plt.figure(figsize=(10, 4))
+plt.plot(df["DT"], df["Price"], linewidth=0.7)
+plt.title("SPY price series")
+plt.xlabel("Time")
+plt.ylabel("Price")
+plt.tight_layout()
+plt.show()
 
 results: Dict[int, Dict[str, object]] = {}
 for window in WINDOWS:
