@@ -176,7 +176,7 @@ TRADING_HALT = [
 #### WORKFLOW #######
 def Phi_Hl(l: int, H: float) -> float:
     """
-    Args:
+    params:
         l: integer lag index (0, 1, 2, ...)
         H: Hurst parameter (typically in (0, 0.5))
     Returns:
@@ -196,7 +196,7 @@ def estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H_min=H_MIN, H_max=H_
     weighting matrix W and empirical moments V, and selects the H that
     minimizes the objective F. After selecting H_hat it computes R_hat by
     projecting V onto Psi(H_hat) under W.
-    Args:
+    params:
         W: weighting matrix (m×m numpy array)
         V: empirical moment column vector (m×1 numpy array)
         Psi_func: callable H -> Psi(H) returning (m×1) numpy array
@@ -232,7 +232,7 @@ def estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H_min=H_MIN, H_max=H_
 def estimation_ratio(V: np.ndarray, Psi_func: Callable[[float], np.ndarray], H_min=H_MIN, H_max=H_MAX, mesh=H_MESH):
     """
     Finds H that minimizes |Psi[1]/Psi[0] - V[1]/V[0]| over a grid of H.
-    Returns (H_hat, R_hat)
+    Returns: (H_hat, R_hat)
     """
     if V.size < 2 or V[0] == 0:
         return np.nan, np.nan
@@ -297,7 +297,7 @@ def build_Psi_function(lags: np.ndarray, window_steps: int):
     for the requested lags and window size. The vector has shape (m, 1),
     where m == len(lags). The factor window_steps ** (2*H) captures the
     scaling with the window length
-    Args:
+    params:
         lags: Array-like of integer lag indices to include (e.g., [1, 2]).
         window_steps: Integer number of subsampled steps in the window (K).
     Returns:
@@ -318,7 +318,7 @@ def build_Psi_function(lags: np.ndarray, window_steps: int):
 
 def std_truncation(arr: np.ndarray, mult: float) -> np.ndarray:
     """
-    Args:
+    params:
         arr: 1D numpy array of increments or residuals.
         mult: multiplier for the standard deviation used as threshold.
     Returns:
@@ -337,7 +337,7 @@ def std_truncation(arr: np.ndarray, mult: float) -> np.ndarray:
 
 def realized_variance(series: np.ndarray, window_steps: int, delta: float) -> np.ndarray:
     """
-    Args:
+    params:
         series: 1D numpy array of increments (e.g. price or count differences).
         window_steps: number of subsampled steps (K) used in the rolling window.
         delta: time step length (seconds) corresponding to one subsampled step.
@@ -352,7 +352,7 @@ def realized_variance(series: np.ndarray, window_steps: int, delta: float) -> np
 
 def build_pattern(vols: List[np.ndarray]) -> np.ndarray:
     """
-    Args:
+    params:
         vols: list of 1D numpy arrays (realized-variance series for each day)
     Returns:
         1D numpy array representing the averaged normalized pattern; returns
@@ -387,7 +387,7 @@ def quadratic_covariations(
     3) Apply std-based truncation to suppress outliers
     4) Compute empirical covariances for lags 0..(n_lags-1).
     5) Apply the lag-1 adjustment (if enabled) and return lags 1..(n_lags-1).
-    Args:
+    params:
         vol: Realized-variance series for the day (1D numpy array).
         pattern: Averaged normalized pattern (1D numpy array).
         window_steps: Integer K (number of subsampled steps).
@@ -444,7 +444,7 @@ def load_clean2(metric: str, progress_cb: Optional[Callable[[int, int], None]] =
     - Parse timestamps and resample to SUBSAMPLING_SECONDS.
     - For orders: count entries per bin; for size: sum SIZE per bin.
     - Normalize each day by its L2 norm and cumulatively sum.
-    Args:
+    params:
         metric: Either "orders" or "size".
         progress_cb: Optional callback invoked as progress_cb(i, total).
     Returns:
@@ -603,7 +603,7 @@ def compute_H_series(
     - Builds the normalized intraday pattern across days.
     - Computes quadratic covariations per day relative to the pattern.
     - Averages empirical covariations and runs the GMM grid search.
-    Args:
+    params:
         series_list: List of pandas Series indexed by datetime and resampled to
             SUBSAMPLING_SECONDS (values are counts or sizes).
         tail_mode: Rule for handling tail behavior in covariations.
