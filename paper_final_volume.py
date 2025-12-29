@@ -182,11 +182,9 @@ def Phi_Hl(l: int, H: float) -> float:
     Returns:
         Floating-point Phi_{H,l} coefficient.
     """
-    num = (abs(l + 2) ** (2 * H + 2) - 4 * abs(l + 1) ** (2 * H + 2) +
-           6 * abs(l) ** (2 * H + 2) - 4 * abs(l - 1) ** (2 * H + 2) +
-           abs(l - 2) ** (2 * H + 2))
-    den = 2 * (2 * H + 1) * (2 * H + 2)
-    return num / den
+
+    return (abs(l + 1) ** (2 * H) - 2 * abs(l) ** (2 * H) + abs(l - 1) ** (2 * H)) / 2
+
 
 def estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H_min=H_MIN, H_max=H_MAX, mesh=H_MESH):
     """
